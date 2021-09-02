@@ -14,6 +14,7 @@ namespace Middleware
         public static HttpListener listener;
 
         public static string url = "http://localhost:8002/";
+
   
         public static async Task Listen()
         {
@@ -23,15 +24,37 @@ namespace Middleware
                 HttpListenerContext ctx = await listener.GetContextAsync();
                 // Peel out the requests and response objects
                 HttpListenerRequest req = ctx.Request;
-                HttpListenerResponse res = ctx.Response;
 
-                byte[] data = Encoding.UTF8.GetBytes(String.Format("LOL"));
+                string customerID = null;
+                // Did the request come with a cookie?
+                Cookie cookie = req.Cookies["ID"];
+                if (cookie != null)
+                {
+                    customerID = cookie.Value;
+                }
+
+                if (customerID != null)
+                {
+                    Console.WriteLine("Found the cookie!");
+                }
+
+                HttpListenerResponse res = ctx.Response;
+                if (customerID == null)
+                {
+                    Random rnd = new Random();
+                    customerID =  rnd.Next().ToString();
+                    Cookie cook = new Cookie("ID", customerID);
+                    res.AppendCookie(cook);
+                }
+
+                byte[] data = Encoding.UTF8.GetBytes(String.Format("your id is {0}",customerID));
                 await res.OutputStream.WriteAsync(data, 0, data.Length);
 
                 res.Close();       
             }
         }
 
+       
         public static async Task SetInterval(Action action, TimeSpan timeout)
         {
             await Task.Delay(timeout).ConfigureAwait(false);

@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Collections.Generic;
+using Middleware.Node;
 
 namespace Middleware
 {
@@ -24,7 +25,10 @@ namespace Middleware
                 HttpListenerContext ctx = await listener.GetContextAsync();
                 // Peel out the requests and response objects
                 HttpListenerRequest req = ctx.Request;
+                HttpListenerResponse res = ctx.Response;
 
+                
+                
                 string customerID = null;
                 // Did the request come with a cookie?
                 Cookie cookie = req.Cookies["ID"];
@@ -32,13 +36,12 @@ namespace Middleware
                 {
                     customerID = cookie.Value;
                 }
-
                 if (customerID != null)
                 {
-                    Console.WriteLine("Found the cookie!");
-                }
+                    Console.WriteLine(req.Cookies["ID"]);
+                    Console.WriteLine(res.Cookies["ID"]);
 
-                HttpListenerResponse res = ctx.Response;
+                }
                 if (customerID == null)
                 {
                     Random rnd = new Random();
@@ -47,11 +50,17 @@ namespace Middleware
                     res.AppendCookie(cook);
                 }
 
+
                 byte[] data = Encoding.UTF8.GetBytes(String.Format("your id is {0}",customerID));
                 await res.OutputStream.WriteAsync(data, 0, data.Length);
 
                 res.Close();       
             }
+        }
+
+        public static void CheckCookies()
+        {
+
         }
 
        
@@ -75,25 +84,28 @@ namespace Middleware
             var i = 0;
             var nodes = NodeManager.nodes;
 
-            _ = SetInterval(() => {
-           
-                NodeManager.PingNode(i);
-          
-                if (i == nodes.Length - 1)
-                    i = 0;
-                else
-                    i++;
 
-                foreach (var node in nodes)
-                {
-                    Console.WriteLine(node.state);
-                }
 
-                Console.WriteLine("------------------");
-                Console.WriteLine();
+            //_ = SetInterval(() =>
+            //{
 
-            }, TimeSpan.FromSeconds(2));
-         
+            //    NodeManager.PingNode(i);
+
+            //    if (i == nodes.Length - 1)
+            //        i = 0;
+            //    else
+            //        i++;
+
+            //    foreach (var node in nodes)
+            //    {
+            //        Console.WriteLine(node.state);
+            //    }
+
+            //    Console.WriteLine("------------------");
+            //    Console.WriteLine();
+
+            //}, TimeSpan.FromSeconds(2));
+
             Task listenTask = Listen();
             listenTask.GetAwaiter().GetResult();
 

@@ -64,7 +64,7 @@ namespace Middleware.Node
 
                 foreach (Node node in this.nodes)
                 {
-                    Console.WriteLine(node.state);
+                    Console.WriteLine(node.state);       
                 }
 
                 AliveNodesUpdatedEventArgs args = new AliveNodesUpdatedEventArgs();

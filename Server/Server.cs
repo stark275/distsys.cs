@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Middleware.Node;
 using Middleware.Client;
+using Middleware.Node.Event;
 
 namespace Middleware.Server
 {
@@ -13,6 +14,7 @@ namespace Middleware.Server
         private readonly int port;
         private  string host;
         private HttpListener httpListener;
+        private NodeManager nodeManager;
         private  RequestManager requestManager; // middleware
 
 
@@ -21,6 +23,7 @@ namespace Middleware.Server
             this.port = port;
             this.host = url;
             this.httpListener = new HttpListener();
+            this.nodeManager = NodeManager.factory();
             this.requestManager = new RequestManager();
         }
 
@@ -78,7 +81,8 @@ namespace Middleware.Server
 
             Console.WriteLine("Listening for connections on {0}", this.host);
 
-            NodeManager.factory().PingLoop(2);
+            this.nodeManager.PingLoop(2);
+            this.nodeManager.aliveNodesUpdated += e_aliveNodesUpdated;
 
             Task listenTask = this.Listen();
             listenTask.GetAwaiter().GetResult();
@@ -90,5 +94,15 @@ namespace Middleware.Server
         {
             return "http://" + this.host + ":" + this.port + "/";
         }
+
+        public void e_aliveNodesUpdated(object sender, AliveNodesUpdatedEventArgs e)
+        {
+            if (e.aliveNodeUrls.Count > 0)
+            {
+                Console.WriteLine(e.aliveNodeUrls[0].AbsoluteUri);
+
+            }
+        }
+
     }
 }

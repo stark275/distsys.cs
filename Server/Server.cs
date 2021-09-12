@@ -4,6 +4,7 @@ using System.Text;
 using System.Net;
 using System.Threading.Tasks;
 using Middleware.Node;
+using Middleware.Client;
 
 namespace Middleware.Server
 {
@@ -12,12 +13,15 @@ namespace Middleware.Server
         private readonly int port;
         private  string host;
         private HttpListener httpListener;
+        private  RequestManager requestManager; // middleware
+
 
         public Server(string url, int port)
         {
             this.port = port;
             this.host = url;
             this.httpListener = new HttpListener();
+            this.requestManager = new RequestManager();
         }
 
         public static Server Factory( string host, int port)
@@ -67,14 +71,14 @@ namespace Middleware.Server
 
         public void Start()
         {
-            var uri = this.GenerateUri();
+            var uri = this.GenerateServerUri();
 
             this.httpListener.Prefixes.Add(uri);
             this.httpListener.Start();
 
             Console.WriteLine("Listening for connections on {0}", this.host);
 
-            NodeManager.PingLoop(2);
+            NodeManager.factory().PingLoop(2);
 
             Task listenTask = this.Listen();
             listenTask.GetAwaiter().GetResult();
@@ -82,7 +86,7 @@ namespace Middleware.Server
             this.httpListener.Close();
         }
 
-        private string GenerateUri()
+        private string GenerateServerUri()
         {
             return "http://" + this.host + ":" + this.port + "/";
         }

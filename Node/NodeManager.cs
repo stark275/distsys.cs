@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Middleware.Node.Event;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
@@ -8,18 +9,28 @@ namespace Middleware.Node
 {
     class NodeManager
     {
-        private static readonly HttpClient client = new HttpClient();
+        private readonly HttpClient client = new HttpClient();
 
-        private static int currentNode = 0;
+        private  int currentNode = 0;
 
-
-        public static Node[] nodes = {
+       
+        public  Node[] nodes = {
             Node.Factory("http","localhost",4000,"n2"),
             Node.Factory("http","localhost",4001,"n3"),
             Node.Factory("http","localhost",4002,""),
         };
 
-        public static async void PingNode(int nodeId)
+        public NodeManager()
+        {
+
+        }
+
+        public static NodeManager factory()
+        {
+            return new NodeManager();
+        }
+
+        public  async void PingNode(int nodeId)
         {
             var responseString = "";
             try
@@ -28,7 +39,7 @@ namespace Middleware.Node
 
                 if (responseString.GetType().Equals(typeof(string)))
                 {
-                    nodes[nodeId].state = "Alive";
+                    this.nodes[nodeId].state = "Alive";
                 }
             }
             catch (Exception)
@@ -39,20 +50,27 @@ namespace Middleware.Node
             Console.WriteLine(responseString);
         }
 
-        public static void PingLoop(int interval)
+        
+
+        public void PingLoop(int interval)
         {
             _ = SetInterval(() =>
             {
-                PingNode(currentNode);
-                if (currentNode == nodes.Length - 1)
-                    currentNode = 0;
+                this.PingNode(this.currentNode);
+                if (this.currentNode == nodes.Length - 1)
+                    this.currentNode = 0;
                 else
-                    currentNode++;
+                    this.currentNode++;
 
-                foreach (var node in nodes)
+                foreach (Node node in this.nodes)
                 {
                     Console.WriteLine(node.state);
                 }
+
+                AliveNodesUpdatedEventArgs args = new AliveNodesUpdatedEventArgs();
+                args.aliveNodeUrls = this.GetAliveNodeUri();
+
+                this.OnAliveNodesUpdated(args);
 
                 Console.WriteLine("------------------");
                 Console.WriteLine();
@@ -60,13 +78,37 @@ namespace Middleware.Node
             }, TimeSpan.FromSeconds(interval));
         }
 
-        public static async Task SetInterval(Action action, TimeSpan timeout)
+        private List<Uri> GetAliveNodeUri()
+        {
+           List<Uri> aliveNodeUriList = new List<Uri>();
+            foreach (Node node in nodes)
+            {
+                if (node.state.Equals("Alive"))
+                {
+                    aliveNodeUriList.Add(node.GetUri());
+                }
+            }
+            return aliveNodeUriList;
+        }
+
+        public  async Task SetInterval(Action action, TimeSpan timeout)
         {
             await Task.Delay(timeout).ConfigureAwait(false);
             action();
 
             _ = SetInterval(action, timeout);
         }
+
+        protected virtual void OnAliveNodesUpdated(AliveNodesUpdatedEventArgs e)
+        {
+            EventHandler<AliveNodesUpdatedEventArgs> handler = this.aliveNodesUpdated;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
+        }
+
+        public event EventHandler<AliveNodesUpdatedEventArgs> aliveNodesUpdated;
 
     }
 }

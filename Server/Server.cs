@@ -68,7 +68,6 @@ namespace Middleware.Server
                 Task<string> resBody = this.requestManager.ForwardAsync(
                     new Message("1", customerID, "", req, res)
                  );
-
                 string body = await resBody;
 
                 byte[] data = Encoding.UTF8.GetBytes(String.Format("{0}", body));

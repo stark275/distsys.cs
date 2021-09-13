@@ -15,8 +15,8 @@ namespace Middleware.Node
 
        
         public  Node[] nodes = {
-            Node.Factory("http","localhost",4000,"n2"),
-            Node.Factory("http","localhost",4001,"n3"),
+            Node.Factory("http","localhost",4000,""),
+            Node.Factory("http","localhost",4001,""),
             Node.Factory("http","localhost",4002,""),
         };
 

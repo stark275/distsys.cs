@@ -34,20 +34,36 @@ namespace Middleware.Client
                 return "";
             }
 
-            url = "http://localhost:4000/" + url;
-            //Console.WriteLine(message.req.Headers);
+            Uri node = this.aliveNodes[this.currentNode];
+            url = node + url;
+
+            this.RandomPolicy();
+
             Console.WriteLine(url);
-            // {/narmol}
+
+            return await client.GetStringAsync(url);
+
             //Console.WriteLine(message.req.Url);
             //Console.WriteLine(message.req.InputStream);
-
-             return await client.GetStringAsync(url);
+            //Console.WriteLine(message.req.Headers);
 
         }
 
         public void DefineAliveNodes(List<Uri> aliveNodes)
         {
             this.aliveNodes = aliveNodes;
+        }
+
+        private void RoundRobinPolicy()
+        {
+            this.currentNode = (this.currentNode == this.aliveNodes.Count - 1)
+                              ? this.currentNode = 0
+                              : this.currentNode++;
+        }
+
+        private void RandomPolicy()
+        {
+            this.currentNode = (new Random()).Next(0, this.aliveNodes.Count);
         }
 
 

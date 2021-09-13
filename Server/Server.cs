@@ -52,10 +52,11 @@ namespace Middleware.Server
                 }
                 if (customerID != null)
                 {
-                    Console.WriteLine(req.Cookies["ID"]);
-                    Console.WriteLine(res.Cookies["ID"]);
+                    //Console.WriteLine(req.Cookies["ID"]);
+                    //Console.WriteLine(res.Cookies["ID"]);
 
                 }
+
                 if (customerID == null)
                 {
                     Random rnd = new Random();
@@ -64,8 +65,13 @@ namespace Middleware.Server
                     res.AppendCookie(cook);
                 }
 
+                Task<string> resBody = this.requestManager.ForwardAsync(
+                    new Message("1", customerID, "", req, res)
+                 );
 
-                byte[] data = Encoding.UTF8.GetBytes(String.Format("your id is {0}", customerID));
+                string body = await resBody;
+
+                byte[] data = Encoding.UTF8.GetBytes(String.Format("{0}", body));
                 await res.OutputStream.WriteAsync(data, 0, data.Length);
 
                 res.Close();
@@ -82,7 +88,7 @@ namespace Middleware.Server
             Console.WriteLine("Listening for connections on {0}", this.host);
 
             this.nodeManager.PingLoop(2);
-            this.nodeManager.aliveNodesUpdated += e_aliveNodesUpdated;
+            this.nodeManager.aliveNodesUpdated += this.requestManager.e_aliveNodesUpdated;
 
             Task listenTask = this.Listen();
             listenTask.GetAwaiter().GetResult();
@@ -95,14 +101,7 @@ namespace Middleware.Server
             return "http://" + this.host + ":" + this.port + "/";
         }
 
-        public void e_aliveNodesUpdated(object sender, AliveNodesUpdatedEventArgs e)
-        {
-            if (e.aliveNodeUrls.Count > 0)
-            {
-                Console.WriteLine(e.aliveNodeUrls[0].AbsoluteUri);
-
-            }
-        }
+       
 
     }
 }

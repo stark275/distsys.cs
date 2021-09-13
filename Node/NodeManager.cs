@@ -35,7 +35,7 @@ namespace Middleware.Node
             var responseString = "";
             try
             {
-                responseString = await client.GetStringAsync(nodes[nodeId].GetUri());
+                responseString = await this.client.GetStringAsync(nodes[nodeId].GetUri());
 
                 if (responseString.GetType().Equals(typeof(string)))
                 {
@@ -47,7 +47,7 @@ namespace Middleware.Node
                 nodes[nodeId].state = "down";
                 // throw;
             }
-            Console.WriteLine(responseString);
+           // Console.WriteLine(responseString);
         }
 
         
@@ -64,7 +64,7 @@ namespace Middleware.Node
 
                 foreach (Node node in this.nodes)
                 {
-                    Console.WriteLine(node.state);       
+                   // Console.WriteLine(node.state);       
                 }
 
                 AliveNodesUpdatedEventArgs args = new AliveNodesUpdatedEventArgs();
